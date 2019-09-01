@@ -1,4 +1,6 @@
-
+select{
+    width: 160px;
+}
 .vertical_top{
     vertical-align: top;
 }
@@ -101,4 +103,28 @@ a:focus{
 
 .section-tabs li{
     padding: 0;
+}
+
+.form-table .template_list_tr th:first-child{
+    width: 30%;
+}
+
+.form-table .list-group-item{
+    cursor: pointer;
+}
+.form-table textarea{
+    width: 90%;
+    height: 300px;
+}
+.form-table td{
+    vertical-align: top;
+}
+.form-table #mam_camp_keyword_list{
+    height: 200px;
+}
+.badge{
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
