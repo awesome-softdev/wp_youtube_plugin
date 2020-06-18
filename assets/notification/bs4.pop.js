@@ -6,22 +6,22 @@ let bs4pop = {};
 	pop.dialog = function(opts){
 
 		opts = jQuery.extend( true, {
-			id: '',//'#xxx'，对话框ID，
+			id: '',//'#xxx'，Dialog ID，
 			title: '',
-			content: '', //可以是 string、element，$object
-			className: '', //自定义样式
+			content: '', //Can be string、element，$object
+			className: '', //Custom style
 			width: 500,
 			height: '',
-			target: 'body',//在什么dom内创建dialog
+			target: 'body',//Create a dialog in what dom
 
-			closeBtn: true, //是否有关闭按钮
-			hideRemove: true,//关闭时移除dom
-			escape: true, //Esc 退出
-			autoFocus: true,//初始化时自动获得焦点
-			show: true,//是否在一开始时就显示对话框
-			backdrop: true,//模态背景 true: 显示模态，false: 没有模态，'static': 显示模态，单击模态不关闭对话框
-			btns: [], //footer按钮 [{label: 'Button',	className: 'btn-primary',onClick(cb){}}]
-			drag: true,//是否启用拖拽
+			closeBtn: true, //Is there a close button?
+			hideRemove: true,//Remove dom when closed
+			escape: true, //Esc Exit
+			autoFocus: true,//Automatically get focus during initialization
+			show: true,//Whether to display the dialog box at the beginning
+			backdrop: true,//Modal background true: display modal, false: no modal, 'static': display modal, click modal without closing dialog
+			btns: [], //Footer button [{label: 'Button', className: 'btn-primary', onClick(cb){}}]
+			drag: true,//Whether to enable drag and drop
 
 			onShowStart(){},
 			onShowEnd(){},
@@ -33,7 +33,7 @@ let bs4pop = {};
 			onDrag(){}
 		}, opts);
 
-		//得到 $el
+		//Get $el
 		let $el = opts.id !== '' ? jQuery('#'+opts.id) : undefined;
 		if(!$el || !$el.length){
 			$el = jQuery(`
@@ -47,10 +47,10 @@ let bs4pop = {};
 			`);
 		}
 
-		//得到 $body
+		//Get $body
 		let $body = $el.find('.modal-body');
 
-		//创建 header
+		//Create header
 		if(opts.closeBtn || opts.title){
 
 			let $header = jQuery('<div class="modal-header"></div>');
@@ -71,7 +71,7 @@ let bs4pop = {};
 
 		}
 
-		//创建 footer
+		//Create footer
 		if(opts.btns.length){
 
 			let $footer = jQuery('<div class="modal-footer"></div>');
@@ -87,12 +87,12 @@ let bs4pop = {};
 
 				$btn.on('click', evt => {
 
-					//提供手动关闭对话框的方法，以便于对话框延迟关闭
+					//Provides a way to manually close the dialog so that the dialog is delayed
 					evt.hide = ()=>{
 						$el.modal('hide');
 					};
 
-					//如果返回不是false就自动隐藏dialog
+					//If the return is not false, the dialog is automatically hidden.
 					if(btn.onClick(evt) !== false){
 						$el.modal('hide');
 					}
@@ -107,24 +107,24 @@ let bs4pop = {};
 
 		}
 
-		//创建内容
+		//Create content
 		if(typeof opts.content === 'string'){
 			$body.html(opts.content);
 		}else if(typeof opts.content === 'object'){
 			$body.empty();
-			jQuery(opts.content).contents().appendTo($body);//移动dom到 modal-body下
+			jQuery(opts.content).contents().appendTo($body);//Move dom to modal-body
 		}
 
-		//设置属性
+		//Setting properties
 		opts.id && $el.attr('id', opts.id);
 		opts.className && $el.addClass(opts.className);
 		opts.width && $el.find('.modal-dialog').width(opts.width).css('max-width', opts.width);
 		opts.height && $el.find('.modal-dialog').height(opts.height);
-		opts.isCenter && $el.find('.modal-dialog').addClass('modal-dialog-centered');//对话框屏幕居中
+		opts.isCenter && $el.find('.modal-dialog').addClass('modal-dialog-centered');//Dialog screen centered
 
-		//绑定事件
+		//Binding event
 		opts.hideRemove && $el.on('hidden.bs.modal',  function(){
-			$el.modal('dispose').remove();//移除dom
+			$el.modal('dispose').remove();//Remove dom
 		});
 		$el.on('show.bs.modal', opts.onShowStart);
 		$el.on('shown.bs.modal', opts.onShowEnd);
@@ -134,7 +134,7 @@ let bs4pop = {};
 			return opts.onClose();
 		});
 
-		//拖拽
+		//Drag and drop
 		if(opts.drag){
 			$el.attr('data-drag', 'drag');
 			drag({
@@ -186,7 +186,7 @@ let bs4pop = {};
 		jQuery('[role="dialog"],.modal-backdrop').remove();
 	};
 
-	//拖拽
+	//Drag and drop
 	function drag(opts){
 
 		opts = jQuery.extend(true, {
@@ -215,7 +215,7 @@ let bs4pop = {};
 			let startData = {
 				pageX: pointEvt.pageX,
 				pageY: pointEvt.pageY,
-				targetPageX: opts.el.offset().left, //当前dom的位置信息
+				targetPageX: opts.el.offset().left, //Current dom location information
 				targetPageY: opts.el.offset().top,
 			};
 
@@ -227,7 +227,7 @@ let bs4pop = {};
 				}
 
 				let moveData = {
-					pageX: pointEvt.pageX, //对于整个页面来说，包括了被卷去的body部分的长度
+					pageX: pointEvt.pageX, //For the entire page, including the length of the body part that was rolled up
 					pageY: pointEvt.pageY,
 					moveX: pointEvt.pageX - startData.pageX,
 					moveY: pointEvt.pageY - startData.pageY,
@@ -264,7 +264,7 @@ let bs4pop = {};
 
 (function(pop){
 
-	//对话框
+	//Dialog
 	pop.alert = function(content, cb, opts){
 
 		let dialogOpts = jQuery.extend(true, {
@@ -288,7 +288,7 @@ let bs4pop = {};
 
 	};
 
-	//确认框
+	//Confirmation box
 	pop.confirm = function(content, cb, opts){
 
 		let dialogOpts = jQuery.extend(true, {
@@ -320,7 +320,7 @@ let bs4pop = {};
 
 	};
 
-	//输入框
+	//Input box
 	pop.prompt = function(content, value, cb, opts){
 
 		let $content = jQuery(`
@@ -362,7 +362,7 @@ let bs4pop = {};
 
 	};
 
-	// 消息框
+	// Message Box
 	pop.notice = function(content, opts){
 
 		opts = jQuery.extend( true, {
@@ -376,7 +376,7 @@ let bs4pop = {};
 
 		}, opts);
 
-		// 得到容器 $container
+		// Get the container $container
 		let $container = jQuery('#alert-container-'+ opts.position);
 		if(!$container.length){
 			$container = jQuery('<div id="alert-container-' + opts.position + '" class="alert-container"></div>');
@@ -388,7 +388,7 @@ let bs4pop = {};
 			<div class="alert fade alert-${opts.type}" role="alert">${content}</div>
 		`);
 
-		// 关闭按钮
+		// Close button
 		if(opts.autoClose){
 			$el
 				.append(`
@@ -399,7 +399,7 @@ let bs4pop = {};
 				.addClass('alert-dismissible');
 		}
 
-		//定时关闭
+		//Timed off
 		if(opts.autoClose){
 
 			let t = setTimeout(() => {

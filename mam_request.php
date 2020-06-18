@@ -272,6 +272,11 @@ if ($kind == 'send_log') {
     $sql = 'select * from ' . $wpdb->prefix . 'mam_templates where name="' . $temp_name . '"';
     $template = $wpdb->get_row($sql);
     echo $template->content;
+} else if ($kind == 'delete_temp') {
+    $temp_name = trim($_POST['temp_name']);
+    $sql = 'delete from ' . $wpdb->prefix . 'mam_templates where name="' . $temp_name . '"';
+    $removefromdb = $wpdb->query($sql);
+    echo $removefromdb;
 } else if ($kind == 'save_setting') {
     $cron_interval = $_POST['cron_interval'];
     $related_limit = $_POST['related_limit'];
@@ -280,6 +285,14 @@ if ($kind == 'send_log') {
     $twitter_limit = $_POST['twitter_limit'];
     $flickr_limit = $_POST['flickr_limit'];
     $pinterest_limit = $_POST['pinterest_limit'];
+    $del_fl_flag = $_POST['del_fl_flag'];
+    $del_ll_flag = $_POST['del_ll_flag'];
+    $enable_related_keywords = $_POST['enable_related_keywords'];
+    $enable_rss = $_POST['enable_rss'];
+    $enable_facebook = $_POST['enable_facebook'];
+    $enable_twitter = $_POST['enable_twitter'];
+    $enable_flickr = $_POST['enable_flickr'];
+    $enable_pinterest = $_POST['enable_pinterest'];
     $user_id = get_current_user_id();
     $sql = 'select * from ' . $wpdb->prefix . 'mam_setting where user_id="' . $user_id . '"';
     $count = $wpdb->get_var($sql);
@@ -289,21 +302,37 @@ if ($kind == 'send_log') {
             'user_id' => $user_id,
             'cron_interval' => $cron_interval,
             'related_limit' => $related_limit,
-            'rss_limit' => $rss_limit, 
-            'facebook_limit' => $facebook_limit, 
-            'twitter_limit' => $twitter_limit, 
-            'flickr_limit' => $flickr_limit, 
-            'pinterest_limit' => $pinterest_limit
+            'rss_limit' => $rss_limit,
+            'facebook_limit' => $facebook_limit,
+            'twitter_limit' => $twitter_limit,
+            'flickr_limit' => $flickr_limit,
+            'pinterest_limit' => $pinterest_limit,
+            'del_fl_flag' => $del_fl_flag,
+            'del_ll_flag' => $del_ll_flag,
+            'enable_related_keywords' => $enable_related_keywords,
+            'enable_rss' => $enable_rss,
+            'enable_facebook' => $enable_facebook,
+            'enable_twitter' => $enable_twitter,
+            'enable_flickr' => $enable_flickr,
+            'enable_pinterest' => $enable_pinterest,
         ));
     } else {
         $wpdb->update($wpdb->prefix . 'mam_setting', array(
             'cron_interval' => $cron_interval,
             'related_limit' => $related_limit,
-            'rss_limit' => $rss_limit, 
-            'facebook_limit' => $facebook_limit, 
-            'twitter_limit' => $twitter_limit, 
-            'flickr_limit' => $flickr_limit, 
-            'pinterest_limit' => $pinterest_limit
+            'rss_limit' => $rss_limit,
+            'facebook_limit' => $facebook_limit,
+            'twitter_limit' => $twitter_limit,
+            'flickr_limit' => $flickr_limit,
+            'pinterest_limit' => $pinterest_limit,
+            'del_fl_flag' => $del_fl_flag,
+            'del_ll_flag' => $del_ll_flag,
+            'enable_related_keywords' => $enable_related_keywords,
+            'enable_rss' => $enable_rss,
+            'enable_facebook' => $enable_facebook,
+            'enable_twitter' => $enable_twitter,
+            'enable_flickr' => $enable_flickr,
+            'enable_pinterest' => $enable_pinterest,
         ), array('user_id' => $user_id));
     }
 } else if ($kind == 'create_temp') {
@@ -314,12 +343,15 @@ if ($kind == 'send_log') {
     if ($count == 0) {
         $wpdb->insert($wpdb->prefix . 'mam_templates', array(
             'name' => $temp_name,
-            'content' => $temp_content
+            'content' => str_replace('\\', '', $temp_content)
         ));
+        echo $temp_name;
+    } else {
+        echo '';
     }
-    echo $temp_name;
 } else if ($kind == 'create_post') {
     $title = $_POST['title'];
+    $keyword = isset($_POST['keyword']) ? $_POST['keyword'] : $title;
     $content = $_POST['content'];
     $status = $_POST['status'];
     $tags = $_POST['tags'];
@@ -333,11 +365,14 @@ if ($kind == 'send_log') {
     $tw_info = $_POST['tw_info'];
     $pi_info = $_POST['pi_info'];
     $fl_api_key = $_POST['fl_api_key'];
+    $enable_twitter = $_POST['enable_twitter'];
+    $enable_flickr = $_POST['enable_flickr'];
+    $enable_pinterest = $_POST['enable_pinterest'];
 
-    $tw_result = get_twitter_fetch($title, $tw_info, $twitter_limit, $logger);
+    $tw_result = $enable_twitter ? get_twitter_fetch($keyword, $tw_info, $twitter_limit, $logger) : '';
     $rss_result = get_rss_fetch($title, $rss_limit, $logger);
-    $pi_result = get_pinterest_fetch($pi_info, $pinterest_limit, $logger);
-    $fl_result = get_flickr_fetch($title, $fl_api_key, $flickr_limit, $logger);
+    $pi_result = $enable_pinterest ? get_pinterest_fetch($pi_info, $pinterest_limit, $logger) : '';
+    $fl_result = $enable_flickr ? get_flickr_fetch($keyword, $fl_api_key, $flickr_limit, $logger) : '';
 
     $content = str_replace('[RSS]', $rss_result, $content);
     $post = array(
@@ -353,7 +388,7 @@ if ($kind == 'send_log') {
     $post['meta_input'] = ['comments' => $comments];
 
     // Write post
-    $postId = wp_insert_post($post);
+    $postId = wp_insert_post($post, true);
     // $logger->send_log('Post "' . $title . '(' . $postId . ')" has been created.');
     Generate_Featured_Image($thumbnail, $postId, $logger);
 
@@ -397,6 +432,7 @@ if ($kind == 'send_log') {
             }
         }
     }
+    echo ($postId);
 }
 
 function convertYoutubeDate($date, $gmt = FALSE)
@@ -524,9 +560,22 @@ function get_pinterest_fetch($pi_info, $pinterest_limit, $logger)
     $count = $pinterest_limit;
     $pin_keyword = $pi_info['pi_keyword'];
     $key = $pi_info['pi_api_key'];
-    $pin_keyword = str_replace(' ', '-', $pin_keyword);
+    $pin_keyword = str_replace(' ', '', $pin_keyword);
     $rss = new DOMDocument();
-    $rss->load('https://www.pinterest.com/' . $pin_keyword . '/feed.rss');
+
+    set_error_handler(
+        function ($severity, $message, $file, $line) {
+            throw new ErrorException($message, $severity, $severity, $file, $line);
+        }
+    );
+    try {
+        $rss->load('https://www.pinterest.com/' . $pin_keyword . '/feed.rss');
+    } catch (Exception $e) {
+        $logger->send_log('Pinterest: Invalid Keyword');
+        return '';
+    }
+    restore_error_handler();
+
     $pin_ids = array();
     $i = 0;
     foreach ($rss->getElementsByTagName('item') as $node) {
@@ -559,7 +608,7 @@ function get_pinterest_fetch($pi_info, $pinterest_limit, $logger)
         $text = $data->note;
         $date = $data->created_at;
 
-        $result .= '<div class="mam_show_item col-md-12">
+        $result .= '<div class="mam_show_item col-md-6">
         <div class="mam-icon-spacer"></div>
         <div class="mam-icon-wrap">
             <div class="mam_item_user_name row">
@@ -629,7 +678,7 @@ function get_twitter_fetch($keyword, $tw_info, $twitter_limit, $logger)
         $name = $status->user->screen_name;
         $avata = $status->user->profile_image_url;
         $date = $status->user->created_at;
-        $result .= '<div class="mam_show_item col-md-12">
+        $result .= '<div class="mam_show_item col-md-6">
             <div class="mam-icon-spacer"></div>
             <div class="mam-icon-wrap">
                 <div class="mam_item_user_name row">
@@ -696,7 +745,7 @@ function get_flickr_fetch($keyword, $key, $flickr_limit, $logger)
         $img_url = 'http://farm' . $info['@attributes']['farm'] . '.staticflickr.com/' . $info['@attributes']['server'] . '/' . $id . '_' . $info['@attributes']['secret'] . '_b.jpg';
         $text = $info['title'];
 
-        $result .= '<div class="mam_show_item col-md-12">
+        $result .= '<div class="mam_show_item col-md-6">
         <div class="mam-icon-spacer"></div>
         <div class="mam-icon-wrap">
             <div class="mam_item_user_name row">
